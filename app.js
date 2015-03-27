@@ -29,7 +29,7 @@ sqlconnection.connect(function(err){
 		console.error(err);
 		throw err;
 	}
-	
+	//yrdyssad
 });
 function testlocationsearch(d1,d2,d3,d4,d5,d6,d7,d8){
 	var query = sqlconnection.query('select * from bluedata',function(err,rows){
