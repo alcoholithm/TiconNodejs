@@ -5,16 +5,24 @@
     <link rel='stylesheet' href='/stylesheets/style.css' />
     <script src="/socket.io/socket.io.js"></script>
     <script>
-	    var socket = io.connect('http://localhost:3000');
-	    socket.on('news', function (data) {
+	    var socket = io.connect('http://210.118.69.130:3000');
+	    
+	    socket.on('dot', function (data) {
 	        console.log(data);
-	        socket.emit('my other event', { my: 'data' });
+			//console.log(document.getElementById("dot")).innerHTML = "ddsd";
+			//document.getElementById("dot")).innerHTML = "ddsd";
+			//.text = data.toString();
+	        //socket.emit('my other event', { my: 'data' });
+			 document.getElementById("dot").innerHTML = data.toString();
 	    });
+		var str = "d";
+	   
     </script>
     
   </head>
   <body>
     <h1><%= title %></h1>
     <p>Welcome to <%= title %></p>
+    <div id="dot"></div>
   </body>
 </html>

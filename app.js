@@ -29,7 +29,7 @@ sqlconnection.connect(function(err){
 		console.error(err);
 		throw err;
 	}
-	//yrdyssad
+	
 });
 function testlocationsearch(d1,d2,d3,d4,d5,d6,d7,d8){
 	var query = sqlconnection.query('select * from bluedata',function(err,rows){
@@ -51,10 +51,12 @@ function testlocationsearch(d1,d2,d3,d4,d5,d6,d7,d8){
 	    });
 	    
 	    console.log(locationstr);
+	    out_socket.emit('dot',locationstr);
 	    //sqlrows.json(rows);
 	});
 }
 
+//function test
 //testlocationsearch(0,0,0,0,0,0,0,0);
 //testlocationsearch(-83.71688312,-70.58441558,	-82.85974026,	-83.14025974,	-79.36623377,	-77.41298701,	-50.92467532,	-69.58701299);
 //testlocationsearch(-78.34650456,-74.06079027,	-57.52279635,	-83.69604863,	-65.54711246,	-79.17325228,	-65.38905775,	-72.17629179);
@@ -86,9 +88,9 @@ var httpserver = http.createServer(app).listen(app.get('port'), function(){
 });
 
 var io = require('socket.io').listen(httpserver);
-
+var out_socket;
 io.sockets.on('connection', function (socket) {
-	
+	out_socket = socket;
     socket.emit('news', { hello: 'world' });
     socket.on('my other event', function (data) {
         console.log(data);
@@ -107,14 +109,13 @@ io.sockets.on('connection', function (socket) {
     
     socket.on('andtest', function (data) {
         console.log(data);
-        console.log(data["d1"]);
-        console.log(data["d2"]);
-        var result = parseInt(data["d1"]) + parseInt(data["d2"]);
-        socket.emit('and',result+'' );
+        //socket.emit('and',result+'' );
     });
     
     socket.on('locationsearch', function (data) {
         console.log(data);
+        
+        /*
         console.log(data["id"]);
         console.log(data["d1"]);
         console.log(data["d2"]);
@@ -124,15 +125,16 @@ io.sockets.on('connection', function (socket) {
         console.log(data["d6"]);
         console.log(data["d7"]);
         console.log(data["d8"]);
+        */
         
-        var d1 = parseFloat(data["d1"]);
-        var d2 = parseFloat(data["d2"]);
-        var d3 = parseFloat(data["d3"]);
-        var d4 = parseFloat(data["d4"]);
-        var d5 = parseFloat(data["d5"]);
-        var d6 = parseFloat(data["d6"]);
-        var d7 = parseFloat(data["d7"]);
-        var d8 = parseFloat(data["d8"]);
+        var d1 = parseFloat(data["90:59:AF:0F:30:CC"]);
+        var d2 = parseFloat(data["90:59:AF:0F:3C:B3"]);
+        var d3 = parseFloat(data["D0:39:72:A4:96:4D"]);
+        var d4 = parseFloat(data["90:59:AF:0F:3D:28"]);
+        var d5 = parseFloat(data["D0:39:72:A4:9B:7F"]);
+        var d6 = parseFloat(data["D0:39:72:A4:96:35"]);
+        var d7 = parseFloat(data["D0:39:72:A4:99:41"]);
+        var d8 = parseFloat(data["90:59:AF:0F:3D:A1"]);
         
         testlocationsearch(d1,d2,d3,d4,d5,d6,d7,d8);
         //var result = parseInt(data["d1"]) + parseInt(data["d2"]);
