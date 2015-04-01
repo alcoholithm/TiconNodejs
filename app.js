@@ -31,10 +31,13 @@ sqlconnection.connect(function(err){
 	}
 	
 });
+
+var maxium = -100;
+
 function testlocationsearch(d1,d2,d3,d4,d5,d6,d7,d8){
 	var query = sqlconnection.query('select * from bluedata',function(err,rows){
 	    //console.log(rows);
-		var maxium = -82;
+		
 		if(d1<maxium)
 			d1 = maxium;
 		if(d2<maxium)
@@ -77,7 +80,7 @@ function testlocationsearch(d1,d2,d3,d4,d5,d6,d7,d8){
 }
 
 function locationupdate(d1,d2,d3,d4,d5,d6,d7,d8,userlocation){
-	var maxium = -82;
+	
 	if(d1<maxium)
 		d1 = maxium;
 	if(d2<maxium)
@@ -105,8 +108,8 @@ function locationupdate(d1,d2,d3,d4,d5,d6,d7,d8,userlocation){
 			'lo7':d7,
 			'lo8':d8
 	}
-	
-	sqlconnection.query("update bluedata set ? where location = '"+userlocation+"'",insertdata, function(err, rows) {
+	sqlconnection.query("insert into bluedata ? ",insertdata, function(err, rows) {
+	//sqlconnection.query("update bluedata set ? where location = '"+userlocation+"'",insertdata, function(err, rows) {
 		
 		sqlconnection.commit();
 	}, function(err, rows) {
@@ -129,14 +132,16 @@ function userIn(userid, axis, axisNum){
 		if(userList[shoot].id === userid){
 			userList[shoot].axis= axis;
 			userList[shoot].axisNum = axisNum;
+			console.log("moving");
 			return;
 		}
 	}
 	
+	out_socket.emit('newTicon',{'id' : userid, 'axis' : axis, 'axisNum' : axisNum});
 	userList.push({'id' : userid, 'axis' : axis, 'axisNum' : axisNum});
 	
 	//out_socket.emit('dot',locationstr);
-	out_socket.emit('newTicon',{'id' : userid, 'axis' : axis, 'axisNum' : axisNum});
+	
 }
 
 function userPush(userid, axis, axisNum){
@@ -181,8 +186,8 @@ var io = require('socket.io').listen(httpserver);
 io.sockets.on('connection', function (socket) {
 	out_socket = socket;
 	
-	userPush("Ticon",1,1);
-	userPush("Ticon2",1,1);
+	//userPush("Ticon",1,1);
+	//userPush("Ticon2",1,1);
 
 
 	
@@ -204,7 +209,7 @@ io.sockets.on('connection', function (socket) {
   
     socket.on('andtest', function (data) {
         console.log(data);
-        /*
+        
         var arrlist = ['Aarr','Barr','Carr','Darr'];
     	
     	
@@ -212,8 +217,9 @@ io.sockets.on('connection', function (socket) {
         var d2 = parseInt(data["axis"]);
         var d3 = parseInt(data["axisNum"]);
         
+        
         userIn(d1,arrlist[d2],d3);
-        */
+        
         //socket.emit('and',result+'' );
     });
     
