@@ -12,6 +12,57 @@ var express = require('express')
 var app = express();
 var userList = [];
 var out_socket;
+
+var maclist = [
+        "90:59:AF:0F:30:CC",
+        "90:59:AF:0F:3C:B3",
+        "D0:39:72:A4:96:4D",
+        "90:59:AF:0F:3D:28",
+        "D0:39:72:A4:9B:7F",
+        "D0:39:72:A4:96:35",
+        "D0:39:72:A4:99:41",
+        "90:59:AF:0F:3D:A1",
+        "D0:39:72:A4:99:33",
+        "D0:39:72:A4:99:A1",
+        "D0:39:72:A4:9B:22",
+        "D0:39:72:A4:B6:56",
+        "D0:39:72:A4:9A:9F",
+        "90:59:AF:0F:3C:C3"
+];
+
+var fs = require('fs');
+
+function txtmake(filename, filestream){
+	/*
+	fs.writeFile('./'+filename+'.txt',filestream,function(err,data){
+		if(err) throw err;
+		console.log("file write");
+	});
+	*/
+	
+	var filestring = "";
+	for(var i = 0;i<14;i++){
+		//filestring +=  parseString(filestream[maclist[i]]);
+		filestring +=  filestream[maclist[i]]+"\n";
+		console.log( filestream[maclist[i]]);
+	}
+	
+	fs.open('./'+filename+'.csv', 'w', function(err, fd) {
+		  if(err) throw err;
+		  var buf = new Buffer(filestring);
+		  fs.write(fd, buf, 0, buf.length, null, function(err, written, buffer) {
+		    if(err) throw err;
+		    //console.log(err, written, buffer);
+		    fs.close(fd, function() {
+		      console.log('Done');
+		    });
+		  });
+		});
+	
+}
+
+
+
 /// mysql connect
 var mysql = require('mysql');
 
@@ -34,10 +85,15 @@ sqlconnection.connect(function(err){
 
 var maxium = -100;
 
-function testlocationsearch(d1,d2,d3,d4,d5,d6,d7,d8){
+
+
+
+function testlocationsearch(d){
 	var query = sqlconnection.query('select * from bluedata',function(err,rows){
 	    //console.log(rows);
 		
+		
+		/*
 		if(d1<maxium)
 			d1 = maxium;
 		if(d2<maxium)
@@ -54,14 +110,23 @@ function testlocationsearch(d1,d2,d3,d4,d5,d6,d7,d8){
 			d7 = maxium;
 		if(d8<maxium)
 			d8 = maxium;
+		*/
 		
 		
 	    var locationstr;
 	    var max=0.0;
 	    rows.forEach(function(row){
+	   
 	    	
-	    	var temp = 1 / (1 +Math.sqrt(Math.pow((d1 - row.lo1),2) + Math.pow((d2 - row.lo2),2) + Math.pow((d3 - row.lo3),2) + Math.pow((d4 - row.lo4),2) +
-	    					Math.pow((d5 - row.lo5),2) + Math.pow((d6 - row.lo6),2) + Math.pow((d7 - row.lo7),2) + Math.pow((d8 - row.lo8),2) ));
+	    	//var temp = 1 / (1 +Math.sqrt(Math.pow((d[1] - row.lo1),2) + Math.pow((d[2] - row.lo2),2) + Math.pow((d[3] - row.lo3),2) + Math.pow((d[4] - row.lo4),2) +
+	    		//			Math.pow((d[5] - row.lo5),2) + Math.pow((d[6] - row.lo6),2) + Math.pow((d[7] - row.lo7),2) + Math.pow((d[8] - row.lo8),2) ));
+	    	
+	    	var temp = 1;
+	    	for(var i = 0;i<14;i++){
+	    		temp += Math.pow((d[i].value - row[d[i].mac]),2);
+	    	}
+	    	temp = 1 / (1 +Math.sqrt(temp,2));
+	    	
 	    	
 	    	console.log(row.location.toString(),temp);
 	    	
@@ -73,7 +138,8 @@ function testlocationsearch(d1,d2,d3,d4,d5,d6,d7,d8){
 	    });
 	    
 	    console.log(locationstr);
-	    userPush("Ticon3",1,1);
+	    
+	    //userPush("Ticon3",1,1);
 	    out_socket.emit('dot',locationstr);
 	    //sqlrows.json(rows);
 	});
@@ -201,7 +267,7 @@ io.sockets.on('connection', function (socket) {
     });
     
     socket.on('req',function(data){
-    	console.log(data);
+    	//console.log(data);
     	setTimeout(function(){socket.emit('moveTicon',userList);},3000);
     	
     });
@@ -223,6 +289,13 @@ io.sockets.on('connection', function (socket) {
         //socket.emit('and',result+'' );
     });
     
+    socket.on("locationinput",function(data,location){
+    	console.log(location);
+    	console.log(data);
+    	console.log("\n");
+    	txtmake(location,data);
+    });
+    
     
     socket.on('locationupdate', function (data) {
         console.log(data);
@@ -241,28 +314,36 @@ io.sockets.on('connection', function (socket) {
     socket.on('locationsearch', function (data) {
         console.log(data);
         
+        var d = [];        
+        
+        for(var i=0; i<14; i++){
+        	d.push({'mac' : maclist[i],'value': parseFloat(data[maclist[i]])});
+        	//d.push({'value': parseFloat(data[maclist[i]])});
+        }
+        
         /*
-        console.log(data["id"]);
-        console.log(data["d1"]);
-        console.log(data["d2"]);
-        console.log(data["d3"]);
-        console.log(data["d4"]);
-        console.log(data["d5"]);
-        console.log(data["d6"]);
-        console.log(data["d7"]);
-        console.log(data["d8"]);
+        d[1][maclist[1]] = parseFloat(data["90:59:AF:0F:3C:B3"]);
+        d[2][maclist[2]] = parseFloat(data["D0:39:72:A4:96:4D"]);
+        d[3][maclist[3]] = parseFloat(data["90:59:AF:0F:3D:28"]);
+        d[4][maclist[4]] = parseFloat(data["D0:39:72:A4:9B:7F"]);
+        d[5][maclist[5]] = parseFloat(data["D0:39:72:A4:96:35"]);
+        d[6][maclist[6]] = parseFloat(data["D0:39:72:A4:99:41"]);
+        d[7][maclist[7]] = parseFloat(data["90:59:AF:0F:3D:A1"]);
         */
         
-        var d1 = parseFloat(data["90:59:AF:0F:30:CC"]);
-        var d2 = parseFloat(data["90:59:AF:0F:3C:B3"]);
-        var d3 = parseFloat(data["D0:39:72:A4:96:4D"]);
-        var d4 = parseFloat(data["90:59:AF:0F:3D:28"]);
-        var d5 = parseFloat(data["D0:39:72:A4:9B:7F"]);
-        var d6 = parseFloat(data["D0:39:72:A4:96:35"]);
-        var d7 = parseFloat(data["D0:39:72:A4:99:41"]);
-        var d8 = parseFloat(data["90:59:AF:0F:3D:A1"]);
+        console.log("not sort!!");
+        console.log(d);
+        d.sort(function(a, b) {
+        	if(a['value'] < b['value'])
+        		return 1;
+        	else
+        		return -1;
+        });
+        console.log("sort!!");
+        console.log(d);
+       
+        testlocationsearch(d);
         
-        testlocationsearch(d1,d2,d3,d4,d5,d6,d7,d8);
         //var result = parseInt(data["d1"]) + parseInt(data["d2"]);
         //socket.emit('and',result+'' );
     });
