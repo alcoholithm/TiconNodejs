@@ -30,6 +30,9 @@ var maclist = [
         "90:59:AF:0F:3C:C3"
 ];
 
+var arrlist = ['Aarr','Barr','Carr','Darr'];
+
+
 var fs = require('fs');
 
 function txtmake(filename, filestream){
@@ -87,57 +90,69 @@ var maxium = -100;
 
 
 
-
-function testlocationsearch(d){
+// 위치정보를 찾아주는 함수
+function testlocationsearch(d,id,clo){
 	var query = sqlconnection.query('select * from bluedata',function(err,rows){
 	    //console.log(rows);
 		
-		
-		/*
-		if(d1<maxium)
-			d1 = maxium;
-		if(d2<maxium)
-			d2 = maxium;
-		if(d3<maxium)
-			d3 = maxium;
-		if(d4<maxium)
-			d4 = maxium;
-		if(d5<maxium)
-			d5 = maxium;
-		if(d6<maxium)
-			d6 = maxium;
-		if(d7<maxium)
-			d7 = maxium;
-		if(d8<maxium)
-			d8 = maxium;
-		*/
-		
-		
 	    var locationstr;
 	    var max=0.0;
-	    rows.forEach(function(row){
-	   
+	    
+	    if(clo == ""){
+		    rows.forEach(function(row){
+		   	    	
+		    	var temp = 1;
+		    	for(var i = 0;i<8;i++){
+		    		if(d[i].value != -98)
+		    			temp += Math.pow((d[i].value - row[d[i].mac]),2);
+		    	}
+		    	temp = 1 / (1 +Math.sqrt(temp,2));
+		    	
+		    	
+		    	console.log(row.location.toString(),temp);
+		    	
+		    	if(max < temp){
+		    		max = temp
+		    		locationstr = row.location.toString();
+		    	}
+		    	
+		    });
+	    }
+	    else{
+	    	var L1 = parseInt(clo.substring(0, clo.indexOf(".")));
+	        var L2 = parseInt(clo.substring(clo.indexOf(".")+1,clo.length));
 	    	
-	    	//var temp = 1 / (1 +Math.sqrt(Math.pow((d[1] - row.lo1),2) + Math.pow((d[2] - row.lo2),2) + Math.pow((d[3] - row.lo3),2) + Math.pow((d[4] - row.lo4),2) +
-	    		//			Math.pow((d[5] - row.lo5),2) + Math.pow((d[6] - row.lo6),2) + Math.pow((d[7] - row.lo7),2) + Math.pow((d[8] - row.lo8),2) ));
-	    	
-	    	var temp = 1;
-	    	for(var i = 0;i<14;i++){
-	    		temp += Math.pow((d[i].value - row[d[i].mac]),2);
-	    	}
-	    	temp = 1 / (1 +Math.sqrt(temp,2));
-	    	
-	    	
-	    	console.log(row.location.toString(),temp);
-	    	
-	    	if(max < temp){
-	    		max = temp
-	    		locationstr = row.location.toString();
-	    	}
-	    	
-	    });
+	    	 rows.forEach(function(row){
+		   	    	
+		   	    	var TL1 = parseInt(row['location'].substring(0, row['location'].indexOf(".")));
+			        var TL2 = parseInt(row['location'].substring(row['location'].indexOf(".")+1,row['location'].length));
+		   	    	
+			        if((L1 -TL1 >=-1 && L1 -TL1 <=1) && (L2 -TL2 >=-1 && L2 -TL2 <=1)){
+				    	var temp = 1;
+				    	for(var i = 0;i<10;i++){
+				    		if(d[i].value != -98)
+				    			temp += Math.pow((d[i].value - row[d[i].mac]),2);
+				    	}
+				    	temp = 1 / (1 +Math.sqrt(temp,2));
+				    	
+				    	
+				    	console.log(row.location.toString(),temp);
+				    	
+				    	if(max < temp){
+				    		max = temp
+				    		locationstr = row.location.toString();
+				    	}
+			        }
+			    });
+	    }
 	    
 	    console.log(locationstr);
+	        	
+        
+        var d1 = parseInt(locationstr.substring(0, locationstr.indexOf(".")));
+        var d2 = parseInt(locationstr.substring(locationstr.indexOf(".")+1,locationstr.length));      
+        
+        userIn(id,arrlist[d1],d2);
 	    
 	    //userPush("Ticon3",1,1);
 	    out_socket.emit('dot',locationstr);
@@ -145,24 +160,9 @@ function testlocationsearch(d){
 	});
 }
 
+// DB에 다이렉트로 업데이트 하는 함수 - 테스트용
 function locationupdate(d1,d2,d3,d4,d5,d6,d7,d8,userlocation){
 	
-	if(d1<maxium)
-		d1 = maxium;
-	if(d2<maxium)
-		d2 = maxium;
-	if(d3<maxium)
-		d3 = maxium;
-	if(d4<maxium)
-		d4 = maxium;
-	if(d5<maxium)
-		d5 = maxium;
-	if(d6<maxium)
-		d6 = maxium;
-	if(d7<maxium)
-		d7 = maxium;
-	if(d8<maxium)
-		d8 = maxium;
 	
 	var insertdata = {
 			'lo1':d1,
@@ -184,15 +184,11 @@ function locationupdate(d1,d2,d3,d4,d5,d6,d7,d8,userlocation){
 	
 }
 
-//locationupdate(0,0,0,0,0,0,0,0,"9.9");
-//function test
-//testlocationsearch(0,0,0,0,0,0,0,0);
-//testlocationsearch(-83.71688312,-70.58441558,	-82.85974026,	-83.14025974,	-79.36623377,	-77.41298701,	-50.92467532,	-69.58701299);
-//testlocationsearch(-78.34650456,-74.06079027,	-57.52279635,	-83.69604863,	-65.54711246,	-79.17325228,	-65.38905775,	-72.17629179);
-//console.log(query);
 
+
+// userpool에 user을 넣는 함수
 function userIn(userid, axis, axisNum){
-	console.log("in:",userid);
+	console.log("User in:",userid);
 	
 	for(var shoot in userList) {
 		if(userList[shoot].id === userid){
@@ -204,7 +200,7 @@ function userIn(userid, axis, axisNum){
 	}
 	
 	out_socket.emit('newTicon',{'id' : userid, 'axis' : axis, 'axisNum' : axisNum});
-	userList.push({'id' : userid, 'axis' : axis, 'axisNum' : axisNum});
+	userList.push({'id' : userid, 'axis' : axis, 'axisNum' : axisNum, "exist":5});
 	
 	//out_socket.emit('dot',locationstr);
 	
@@ -247,7 +243,17 @@ var httpserver = http.createServer(app).listen(app.get('port'), function(){
 //ra();
 var io = require('socket.io').listen(httpserver);
 
+setTimeout(function(){
+	for(var shoot in userList) {
+		if(userList[shoot].exist > 0){
+			userList[shoot].exist--;
+		}
+		else{
+			// 분리
+		}
+	}
 
+},3000);
 
 io.sockets.on('connection', function (socket) {
 	out_socket = socket;
@@ -276,17 +282,14 @@ io.sockets.on('connection', function (socket) {
     socket.on('andtest', function (data) {
         console.log(data);
         
-        var arrlist = ['Aarr','Barr','Carr','Darr'];
-    	
+        var arrlist = ['Aarr','Barr','Carr','Darr'];    	
     	
         var d1 = data["id"];
         var d2 = parseInt(data["axis"]);
-        var d3 = parseInt(data["axisNum"]);
-        
+        var d3 = parseInt(data["axisNum"]);        
         
         userIn(d1,arrlist[d2],d3);
         
-        //socket.emit('and',result+'' );
     });
     
     socket.on("locationinput",function(data,location){
@@ -318,20 +321,9 @@ io.sockets.on('connection', function (socket) {
         
         for(var i=0; i<14; i++){
         	d.push({'mac' : maclist[i],'value': parseFloat(data[maclist[i]])});
-        	//d.push({'value': parseFloat(data[maclist[i]])});
         }
-        
-        /*
-        d[1][maclist[1]] = parseFloat(data["90:59:AF:0F:3C:B3"]);
-        d[2][maclist[2]] = parseFloat(data["D0:39:72:A4:96:4D"]);
-        d[3][maclist[3]] = parseFloat(data["90:59:AF:0F:3D:28"]);
-        d[4][maclist[4]] = parseFloat(data["D0:39:72:A4:9B:7F"]);
-        d[5][maclist[5]] = parseFloat(data["D0:39:72:A4:96:35"]);
-        d[6][maclist[6]] = parseFloat(data["D0:39:72:A4:99:41"]);
-        d[7][maclist[7]] = parseFloat(data["90:59:AF:0F:3D:A1"]);
-        */
-        
-        console.log("not sort!!");
+      
+        console.log("not sorted!!");
         console.log(d);
         d.sort(function(a, b) {
         	if(a['value'] < b['value'])
@@ -339,13 +331,11 @@ io.sockets.on('connection', function (socket) {
         	else
         		return -1;
         });
-        console.log("sort!!");
+        console.log("sorted!!");
         console.log(d);
        
-        testlocationsearch(d);
-        
-        //var result = parseInt(data["d1"]) + parseInt(data["d2"]);
-        //socket.emit('and',result+'' );
+        testlocationsearch(d,data['id'],data['currentlocation']);
+              
     });
     
     
