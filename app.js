@@ -30,7 +30,7 @@ var maclist = [
         "90:59:AF:0F:3C:C3"
 ];
 
-var arrlist = ['Aarr','Barr','Carr','Darr'];
+var arrList = ['Aarr','Barr','Carr','Darr','Earr'];
 
 
 var fs = require('fs');
@@ -127,7 +127,7 @@ function testlocationsearch(d,id,clo){
 		   	    	var TL1 = parseInt(row['location'].substring(0, row['location'].indexOf(".")));
 			        var TL2 = parseInt(row['location'].substring(row['location'].indexOf(".")+1,row['location'].length));
 		   	    	
-			        if((L1 -TL1 >=-1 && L1 -TL1 <=1) && (L2 -TL2 >=-1 && L2 -TL2 <=1)){
+			        if((L1 -TL1 >=-2 && L1 -TL1 <=2) && (L2 -TL2 >=-2 && L2 -TL2 <=2)){
 				    	var temp = 1;
 				    	for(var i = 0;i<10;i++){
 				    		if(d[i].value != -98)
@@ -152,7 +152,11 @@ function testlocationsearch(d,id,clo){
         var d1 = parseInt(locationstr.substring(0, locationstr.indexOf(".")));
         var d2 = parseInt(locationstr.substring(locationstr.indexOf(".")+1,locationstr.length));      
         
-        userIn(id,arrlist[d1],d2);
+        //userIn(id,arrList[d1],d2);
+        userIn("testOne",arrList[d1],d2);
+        
+        console.log(d1,arrList[d1],d2);
+        
 	    
 	    //userPush("Ticon3",1,1);
 	    out_socket.emit('dot',locationstr);
@@ -189,7 +193,7 @@ function locationupdate(d1,d2,d3,d4,d5,d6,d7,d8,userlocation){
 // userpool에 user을 넣는 함수
 function userIn(userid, axis, axisNum){
 	console.log("User in:",userid);
-	
+	var temp = 3;
 	for(var shoot in userList) {
 		if(userList[shoot].id === userid){
 			userList[shoot].axis= axis;
@@ -200,20 +204,39 @@ function userIn(userid, axis, axisNum){
 	}
 	
 	out_socket.emit('newTicon',{'id' : userid, 'axis' : axis, 'axisNum' : axisNum});
-	userList.push({'id' : userid, 'axis' : axis, 'axisNum' : axisNum, "exist":5});
-	
+	userList.push({'id' : userid, 'axis' : axis, 'axisNum' : axisNum, 'ex' : temp});
+	console.log(userList);
 	//out_socket.emit('dot',locationstr);
 	
 }
 
+function userRemove(index){
+	out_socket.emit('deleteTicon',{'id' : userList[index].id, 'axis' : userList[index].axis, 'axisNum' : userList[index].axisNum});
+	console.log("remove user",userList[index]);
+	userList.splice(index,1);
+}
+
+// userpool에서 user 제거
+function userCheck(){
+	console.log(userList);
+	for(var shoot in userList) {
+		if(userList[shoot].ex > 0){
+			userList[shoot].ex--;
+			console.log("moving");
+		}
+		else{
+			userRemove(shoot);
+		}
+	}
+}
+
 function userPush(userid, axis, axisNum){
-	var arrlist = ['Aarr','Barr','Carr','Darr'];
 	
 	//var ranNum = parseInt((Math.random() * 100 % 4) +"");
 	//var aranNum = parseInt((Math.random() * 100 % 4) +"");
 	//console.log(ranNum);
 	
-	userIn(userid,arrlist[axis],axisNum);
+	userIn(userid,arrList[axis],axisNum);
 	
 	//setTimeout(function(){socket.emit('moveTicon',{id:"Ticon",axis:arrlist[ranNum],axisNum:aranNum});},3000);
 }
@@ -255,12 +278,14 @@ setTimeout(function(){
 
 },3000);
 
+
+setInterval(userCheck, 5000);
 io.sockets.on('connection', function (socket) {
 	out_socket = socket;
 	
 	//userPush("Ticon",1,1);
 	//userPush("Ticon2",1,1);
-
+	
 
 	
     socket.emit('news', 'world');
@@ -282,13 +307,13 @@ io.sockets.on('connection', function (socket) {
     socket.on('andtest', function (data) {
         console.log(data);
         
-        var arrlist = ['Aarr','Barr','Carr','Darr'];    	
+        var arrList = ['Aarr','Barr','Carr','Darr'];    	
     	
         var d1 = data["id"];
         var d2 = parseInt(data["axis"]);
         var d3 = parseInt(data["axisNum"]);        
         
-        userIn(d1,arrlist[d2],d3);
+        userIn(d1,arrList[d2],d3);
         
     });
     
