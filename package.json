@@ -12,6 +12,8 @@
     "better-js-class": "*",
     "cps": "*",
     "mysql": "*",
-    "underscore": "*"
+    "underscore": "*",
+    "socket.io-announce" : "*",
+    "redis":"*"
   }
 }
